@@ -1,4 +1,5 @@
 let addToy = false;
+const API = "http://localhost:3000/toys";
 
 /*
 Access the list of toys from an API (mocked using JSON Server) and render each of them in a "card" on the page
@@ -11,7 +12,7 @@ json-server --watch db.json
 
 */
 
-function createCardElement(toy) {
+function renderCard(toy) {
   let card = document.createElement("div")
   card.classList.add("card")
 
@@ -38,11 +39,60 @@ document.getElementById("toy-collection").appendChild(card)
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  fetch("http://localhost:3000/toys")
-  .then(response => response.json())
-  .then(toys => toys.forEach(toy => createCardElement(toy)))
   const addBtn = document.querySelector("#new-toy-btn");
   const toyFormContainer = document.querySelector(".container");
+  const toyForm = document.querySelector(".add-toy-form")
+
+  toyForm.addEventListener("submit", (e) => {
+      e.preventDefault()
+      const data = Object.fromEntries(new FormData(e.target))
+      data.likes = 0
+      fetch(API, {
+        method: "POST", 
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify(data)
+      })
+      .then((resp) => resp.json())
+      .then((data) => renderCard(data))
+  })
+
+
+  fetch(API)
+  .then((response) => response.json())
+  .then(renderToys)
+
+
+  function renderToys(toyList){
+    
+
+    toyList.forEach((toy) => {
+        const card = document.createElement("div")
+        card.classList.add("card")
+        
+        const img = document.createElement("img")   
+        img.classList.add("toy-avatar")
+        img.src = toy.image   
+
+        const h2 = document.createElement("h2")
+        h2.textContent = toy.name
+
+        const p = document.createElement("p")
+        p.textContent = `${toy.likes} Likes`
+
+        const button = document.createElement("button")
+        button.classList.add("like-btn")
+        button.setAttribute("id", `${toy.id}`)
+        button.textContent = "Like ❤️"
+
+        card.append(h2, img, p, button)
+        
+        document.querySelector("#toy-collection").appendChild(card)
+    })
+  }
+
   addBtn.addEventListener("click", () => {
     // hide & seek with the form
     addToy = !addToy;
